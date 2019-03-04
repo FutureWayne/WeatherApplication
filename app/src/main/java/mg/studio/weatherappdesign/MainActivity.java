@@ -1,5 +1,8 @@
 package mg.studio.weatherappdesign;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -7,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import org.json.JSONArray;
@@ -34,10 +38,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        btnClick(null);
     }
 
     public void btnClick(View view) {
-        new DownloadUpdate().execute();
+
+        //Check whether the network is available.
+        ConnectivityManager connectivityManager = (ConnectivityManager)this.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = connectivityManager.getActiveNetworkInfo();
+        if(info != null && info.isAvailable())
+            new DownloadUpdate().execute();
+        else
+            Toast.makeText(this, "No network available", Toast.LENGTH_SHORT).show();
+
     }
 
 
@@ -117,7 +130,11 @@ public class MainActivity extends AppCompatActivity {
             //Update the temperature displayed
             ((TextView) findViewById(R.id.temperature_of_the_day)).setText(temperature);
 
+            Toast.makeText(MainActivity.this, "Weather updated", Toast.LENGTH_SHORT).show();
+
             updateDateAndLocation();
+
+            //Circularly updating all icons and text.
             for (int i = 0; i <= 4; i++) {
                 updateIconByDay(arrayList, i);
                 updateDayOfWeek(i);
@@ -129,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void updateIconByDay(JSONArray jsonArray, int index){
             try{
+                //Parse json file.
                 JSONObject thisDay = jsonArray.getJSONObject(index * 8);
                 String weather = thisDay.optString("weather").toString();
                 JSONArray weatherArray = new JSONArray(weather);
@@ -137,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
                 ImageView thisView;
 
+                //Assign target image view ID to change icon according to image view indexes.
                 switch(index)
                 {
                     case 0:
@@ -158,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
                         thisView = findViewById(R.id.weather_condition_0);
                 }
 
+                //Change icon according to weather condition.
                 switch(result)
                 {
                     case"Rain":
@@ -180,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     protected void updateDayOfWeek(int index){
+        //Get corresponding day of week according to date.
         String dayNamesMain[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
         String dayNamesShort[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
         String dayName;
@@ -195,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
 
         TextView thisView;
 
+        //Assign target text view ID to change day of week text.
         switch(index)
         {
             case 0:
